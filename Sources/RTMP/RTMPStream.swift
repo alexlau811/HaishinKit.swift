@@ -272,7 +272,61 @@ open class RTMPStream: NetStream {
             guard oldValue != readyState else {
                 return
             }
+<<<<<<< HEAD
             didChangeReadyState(readyState, oldValue: oldValue)
+=======
+
+            switch oldValue {
+            case .playing:
+                mixer.stopDecoding()
+            case .publishing:
+                #if os(iOS)
+                    mixer.videoIO.screen?.stopRunning()
+                #endif
+                mixer.audioIO.encoder.delegate = nil
+                mixer.videoIO.encoder.delegate = nil
+                mixer.audioIO.encoder.stopRunning()
+                mixer.videoIO.encoder.stopRunning()
+                sampler?.stopRunning()
+                
+            default:
+                break
+            }
+
+            switch readyState {
+            case .open:
+                currentFPS = 0
+                frameCount = 0
+                info.clear()
+                delegate?.clear()
+            case .playing:
+                mixer.delegate = self
+                mixer.startDecoding(rtmpConnection.audioEngine)
+            case .publish:
+                muxer.dispose()
+                muxer.delegate = self
+                #if os(iOS)
+                    mixer.videoIO.screen?.startRunning()
+                #endif
+                mixer.audioIO.encoder.delegate = muxer
+                mixer.videoIO.encoder.delegate = muxer
+                sampler?.delegate = muxer
+                mixer.startRunning()
+                videoWasSent = false
+                audioWasSent = false
+            case .publishing:
+                send(handlerName: "@setDataFrame", arguments: "onMetaData", createMetaData())
+                mixer.audioIO.encoder.startRunning()
+                mixer.videoIO.encoder.startRunning()
+                sampler?.startRunning()
+                if howToPublish == .localRecord {
+                    mixer.recorder.fileName = FilenameUtil.fileName(resourceName: info.resourceName)
+                    mixer.recorder.startRunning()
+                }
+            default:
+                break
+            }
+>>>>>>> b45f8e3 (- Fix Stability of the Sockets)
         }
     }
     var audioTimestamp: Double = 0.0

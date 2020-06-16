@@ -62,7 +62,7 @@ open class NetSocket: NSObject {
 
     /// Creates a two-way connection to a server.
     public func connect(withName: String, port: Int) {
-        inputQueue.async {
+        DispatchQueue.global(qos: .userInteractive).async {
             Stream.getStreamsToHost(
                 withName: withName,
                 port: port,
@@ -84,6 +84,11 @@ open class NetSocket: NSObject {
             if let outputStream = self.outputStream, outputStream.hasSpaceAvailable {
                 self.doOutput(outputStream)
             }
+            catch {print("err in doOutput") }
+        }
+        // Handle lock here
+        if locked != nil {
+            OSAtomicAnd32Barrier(0, locked!)
         }
         return data.count
     }
