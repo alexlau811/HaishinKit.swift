@@ -86,10 +86,7 @@ open class NetSocket: NSObject {
             }
             catch {print("err in doOutput") }
         }
-        // Handle lock here
-        if locked != nil {
-            OSAtomicAnd32Barrier(0, locked!)
-        }
+      
         return data.count
     }
 
