@@ -50,10 +50,11 @@ Enterprise Grade APIs for Feeds & Chat. <a href="https://getstream.io/tutorials/
 ### Rendering
 |-|HKView|MTHKView|
 |-|:---:|:---:|
-|Engine|AVCaptureVideoPreviewLayer|Metal|
+|Engine|AVSampleBufferDisplayLayer|Metal|
 |Publish|○|◯|
-|Playback|×|◯|
+|Playback|○|◯|
 |VisualEffect|×|◯|
+|AVPictureInPictureController|○|×|
 |Condition|Stable|Stable|
 
 ### Others

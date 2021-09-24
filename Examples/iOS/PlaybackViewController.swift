@@ -1,15 +1,17 @@
 import AVFoundation
+import AVKit
 import Foundation
 import HaishinKit
 import UIKit
 
-final class PlaybackViewController: UIViewController, HKPictureInPicureController {
+final class PlaybackViewController: UIViewController, HKPictureInPicureController, AVPictureInPictureSampleBufferPlaybackDelegate {
     private static let maxRetryCount: Int = 5
 
     @IBOutlet private weak var playbackButton: UIButton!
     private var rtmpConnection = RTMPConnection()
     private var rtmpStream: RTMPStream!
     private var retryCount: Int = 0
+    private var pictureInPictureController: AVPictureInPictureController?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,11 +19,15 @@ final class PlaybackViewController: UIViewController, HKPictureInPicureControlle
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapped(_:)))
         tapGesture.numberOfTapsRequired = 2
         view.addGestureRecognizer(tapGesture)
+        if let layer = view.layer as? AVSampleBufferDisplayLayer, #available(iOS 15.0, *) {
+            pictureInPictureController = AVPictureInPictureController(contentSource: .init(sampleBufferDisplayLayer: layer, playbackDelegate: self))
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         logger.info("viewWillAppear")
         super.viewWillAppear(animated)
+        (view as? HKView)?.attachStream(rtmpStream)
         (view as? MTHKView)?.attachStream(rtmpStream)
         NotificationCenter.default.addObserver(self, selector: #selector(didInterruptionNotification(_:)), name: AVAudioSession.interruptionNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didRouteChangeNotification(_:)), name: AVAudioSession.routeChangeNotification, object: nil)
@@ -49,6 +55,10 @@ final class PlaybackViewController: UIViewController, HKPictureInPicureControlle
             button.setTitle("■", for: [])
         }
         button.isSelected.toggle()
+    }
+
+    @IBAction func didEnterPixtureInPicture(_ button: UIButton) {
+        pictureInPictureController?.startPictureInPicture()
     }
 
     @objc
@@ -109,5 +119,26 @@ final class PlaybackViewController: UIViewController, HKPictureInPicureControlle
     @objc
     private func didRouteChangeNotification(_ notification: Notification) {
         logger.info("didRouteChangeNotification")
+    }
+}
+
+extension PlaybackViewController: AVPictureInPictureControllerDelegate {
+    // MARK: AVPictureInPictureControllerDelegate
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, setPlaying playing: Bool) {
+    }
+
+    func pictureInPictureControllerTimeRangeForPlayback(_ pictureInPictureController: AVPictureInPictureController) -> CMTimeRange {
+        return CMTimeRange(start: .zero, duration: .positiveInfinity)
+    }
+
+    func pictureInPictureControllerIsPlaybackPaused(_ pictureInPictureController: AVPictureInPictureController) -> Bool {
+        return false
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, didTransitionToRenderSize newRenderSize: CMVideoDimensions) {
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, skipByInterval skipInterval: CMTime, completion completionHandler: @escaping () -> Void) {
+        completionHandler()
     }
 }

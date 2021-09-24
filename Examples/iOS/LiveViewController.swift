@@ -26,7 +26,7 @@ final class ExampleRecorderDelegate: DefaultAVRecorderDelegate {
 final class LiveViewController: UIViewController {
     private static let maxRetryCount: Int = 5
 
-    @IBOutlet private weak var lfView: MTHKView!
+    @IBOutlet private weak var lfView: HKView!
     @IBOutlet private weak var currentFPSLabel: UILabel!
     @IBOutlet private weak var publishButton: UIButton!
     @IBOutlet private weak var pauseButton: UIButton!
