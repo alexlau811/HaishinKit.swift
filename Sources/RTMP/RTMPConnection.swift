@@ -60,7 +60,7 @@ open class RTMPConnection: EventDispatcher {
             case .callProhibited:
                 return "error"
             case .connectAppshutdown:
-                return "status"
+                return "error"
             case .connectClosed:
                 return "status"
             case .connectFailed:
@@ -72,7 +72,7 @@ open class RTMPConnection: EventDispatcher {
             case .connectNetworkChange:
                 return "status"
             case .connectRejected:
-                return "status"
+                return "error"
             case .connectSuccess:
                 return "status"
             }

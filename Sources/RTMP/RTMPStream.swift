@@ -107,7 +107,7 @@ open class RTMPStream: NetStream {
             case .playStop:
                 return "status"
             case .playStreamNotFound:
-                return "status"
+                return "error"
             case .playTransition:
                 return "status"
             case .playUnpublishNotify:
