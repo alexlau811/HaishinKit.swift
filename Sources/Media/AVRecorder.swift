@@ -282,7 +282,7 @@ extension DefaultAVRecorderDelegate: AVRecorderDelegate {
         rotateTime = CMTime.zero
     }
 
-    func createWriter(_ fileName: String?) -> AVAssetWriter? {
+    open func createWriter(_ fileName: String?) -> AVAssetWriter? {
         do {
             let dateFormatter = DateFormatter()
             dateFormatter.locale = Locale(identifier: "en_US")
