@@ -51,8 +51,10 @@ public final class VideoCodec {
 
     public static let defaultWidth: Int32 = 480
     public static let defaultHeight: Int32 = 272
-    public static let defaultBitrate: UInt32 = 160 * 1000
+    public static let defaultBitrate: UInt32 = 2000 * 1000
     public static let defaultScalingMode: ScalingMode = .trim
+    // var maxDataRateBitrateFactor: Double = 1.3 Hardcoded lower 
+    static let defaultDataRateLimits:[Int] = [Int(Double(defaultBitrate) * 1.3 / 8), 1]
 
     static let defaultAttributes: [NSString: AnyObject] = [
         kCVPixelBufferIOSurfacePropertiesKey: [:] as AnyObject,
@@ -102,12 +104,23 @@ public final class VideoCodec {
         }
     }
     #endif
-    var bitrate: UInt32 = VideoCodec.defaultBitrate {
+    var dataRateLimits:[Int] = H264Encoder.defaultDataRateLimits {
+        didSet {
+            guard dataRateLimits != oldValue else {
+                return
+            }
+            invalidateSession = true
+            setProperty(kVTCompressionPropertyKey_DataRateLimits, self.dataRateLimits as CFTypeRef)
+        }
+    }
+    var bitrate: UInt32 = H264Encoder.defaultBitrate {
         didSet {
             guard bitrate != oldValue else {
                 return
             }
             setProperty(kVTCompressionPropertyKey_AverageBitRate, Int(bitrate) as CFTypeRef)
+            // Update dataRateLimits accordingly when changing bitrate adaptively
+            dataRateLimits = [Int(round(Double(bitrate) * 1.3 / 8)), 1]
         }
     }
     var profileLevel: String = kVTProfileLevel_H264_Baseline_3_1 as String {
@@ -127,7 +140,7 @@ public final class VideoCodec {
         }
     }
     var locked: UInt32 = 0
-    var lockQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.H264Encoder.lock")
+    var lockQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.H264Encoder.lock", qos: .userInitiated)
     var expectedFPS: Float64 = AVMixer.defaultFPS {
         didSet {
             guard expectedFPS != oldValue else {
@@ -163,6 +176,7 @@ public final class VideoCodec {
             kVTCompressionPropertyKey_RealTime: kCFBooleanTrue,
             kVTCompressionPropertyKey_ProfileLevel: profileLevel as NSObject,
             kVTCompressionPropertyKey_AverageBitRate: Int(bitrate) as NSObject,
+            kVTCompressionPropertyKey_DataRateLimits: dataRateLimits as NSObject,
             kVTCompressionPropertyKey_ExpectedFrameRate: NSNumber(value: expectedFPS),
             kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration: NSNumber(value: maxKeyFrameIntervalDuration),
             kVTCompressionPropertyKey_AllowFrameReordering: !isBaseline as NSObject,

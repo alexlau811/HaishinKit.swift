@@ -274,6 +274,7 @@ open class RTMPStream: NetStream {
                 return
             }
             didChangeReadyState(readyState, oldValue: oldValue)
+
         }
     }
     var audioTimestamp: Double = 0.0
@@ -486,7 +487,7 @@ open class RTMPStream: NetStream {
             mixer.videoIO.encoder.delegate = nil
             mixer.audioIO.codec.stopRunning()
             mixer.videoIO.encoder.stopRunning()
-            mixer.recorder.stopRunning()
+//            mixer.recorder.stopRunning()
         default:
             break
         }

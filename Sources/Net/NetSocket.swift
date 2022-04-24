@@ -62,7 +62,7 @@ open class NetSocket: NSObject {
 
     /// Creates a two-way connection to a server.
     public func connect(withName: String, port: Int) {
-        inputQueue.async {
+        DispatchQueue.global(qos: .userInteractive).async {
             Stream.getStreamsToHost(
                 withName: withName,
                 port: port,
@@ -74,19 +74,19 @@ open class NetSocket: NSObject {
     }
 
     @discardableResult
-    public func doOutput(data: Data, locked: UnsafeMutablePointer<UInt32>? = nil) -> Int {
-        queueBytesOut.mutate { $0 += Int64(data.count) }
-        outputQueue.async { [weak self] in
-            guard let self = self else {
-                return
+        public func doOutput(data: Data, locked: UnsafeMutablePointer<UInt32>? = nil) -> Int {
+            queueBytesOut.mutate { $0 += Int64(data.count) }
+            outputQueue.async { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.outputBuffer.append(data, locked: locked)
+                if let outputStream = self.outputStream, outputStream.hasSpaceAvailable {
+                    self.doOutput(outputStream)
+                }
             }
-            self.outputBuffer.append(data, locked: locked)
-            if let outputStream = self.outputStream, outputStream.hasSpaceAvailable {
-                self.doOutput(outputStream)
-            }
+            return data.count
         }
-        return data.count
-    }
 
     open func close() {
         close(isDisconnected: false)
